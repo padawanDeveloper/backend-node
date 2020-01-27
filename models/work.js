@@ -1,6 +1,7 @@
 "use strict";
 
 const mongoose = require("mongoose");
+var mongoosePaginate = require("mongoose-paginate-v2");
 const Schema = mongoose.Schema;
 
 const WorkSchema = Schema({
@@ -12,5 +13,7 @@ const WorkSchema = Schema({
   description: String,
   image: String
 });
+
+WorkSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Work", WorkSchema);
