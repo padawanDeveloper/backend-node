@@ -5,6 +5,7 @@ const path = require("path");
 
 const jwt = require("../services/jwt");
 const User = require("../models/user");
+const Follow = require("../models/follow");
 
 // Routes
 function home(req, res) {
@@ -84,11 +85,65 @@ function getUser(req, res) {
   User.findById(userId, (err, user) => {
     if (err) return res.status(500).send({ message: "Error en la peticion" });
     if (!user) return res.status(404).send({ message: "El usuario no existe" });
-    return res.status(200).send({ user });
+    followThisUser(req.user.sub, userId).then(value => {
+      return res
+        .status(200)
+        .send({ user, following: value.following, followed: value.followed });
+    });
   });
 }
 
+async function followThisUser(identity_user_id, user_id) {
+  const following = await Follow.findOne({
+    user: identity_user_id,
+    followed: user_id
+  })
+    .exec()
+    .then(follow => follow)
+    .catch(err => handleHerror(err));
+
+  const followed = await Follow.findOne({
+    user: user_id,
+    followed: identity_user_id
+  })
+    .exec()
+    .then(follow => follow)
+    .catch(err => handleHerror(err));
+
+  return { following: following, followed: followed };
+}
+
+async function followUserIds(user_id) {
+  const following = await Follow.find({ user: user_id })
+    .select({
+      _id: 0,
+      __v: 0,
+      user: 0
+    })
+    .exec()
+    .then(follows => follows);
+
+  const followed = await Follow.find({ followed: user_id })
+    .select({
+      _id: 0,
+      __v: 0,
+      followed: 0
+    })
+    .exec()
+    .then(follows => follows);
+
+  const following_clean = [];
+  following.forEach(follow => following_clean.push(follow.followed));
+
+  const followed_clean = [];
+  followed.forEach(follow => followed_clean.push(follow.user));
+
+  return { following: following_clean, followed: followed_clean };
+}
+
+//TODO: Re estructurar objeto result
 function getUsers(req, res) {
+  const identity_user_id = req.user.id;
   const page = 1;
   if (req.params.page) {
     page = req.params.page;
@@ -102,9 +157,16 @@ function getUsers(req, res) {
   User.paginate({}, options, (err, result) => {
     const users = result.docs;
     if (err) return res.status(500).send({ message: "Error en la peticion" });
-    if (users.docs.length == 0)
+    if (users.length == 0)
       return res.status(404).send({ message: "No hay usuarios" });
-    return res.status(200).send(result);
+
+    followUserIds(identity_user_id).then(value => {
+      return res.status(200).send({
+        result,
+        users_following: value.following,
+        users_follow_me: value.followed
+      });
+    });
   });
 }
 
