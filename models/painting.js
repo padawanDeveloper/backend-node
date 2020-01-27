@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const PaitingSchema = Schema({
   colors: [String],
   technique: String,
-  materials: [{ type: Schema.ObjectId, ref: "paiting" }]
+  materials: [{ type: Schema.ObjectId, ref: "Product" }]
 });
 
 module.exports = mongoose.model("Paiting", PaitingSchema);
