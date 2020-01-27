@@ -1,10 +1,11 @@
 // Import express
-var express = require("express");
-var bodyParser = require("body-parser");
+const express = require("express");
+const bodyParser = require("body-parser");
 
 // Initialize the app
-var app = express();
-var user_routes = require("./routes/user");
+const app = express();
+const user_routes = require("./routes/user");
+const follow_routes = require("./routes/follow");
 
 // Middlewares
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -12,5 +13,6 @@ app.use(bodyParser.json());
 
 // Routes
 app.use("/api", user_routes);
+app.use("/api", follow_routes);
 
 module.exports = app;

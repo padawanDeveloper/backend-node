@@ -102,7 +102,7 @@ function getUsers(req, res) {
   User.paginate({}, options, (err, result) => {
     const users = result.docs;
     if (err) return res.status(500).send({ message: "Error en la peticion" });
-    if (users.length == 0)
+    if (users.docs.length == 0)
       return res.status(404).send({ message: "No hay usuarios" });
     return res.status(200).send(result);
   });
