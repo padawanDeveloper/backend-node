@@ -18,3 +18,8 @@ exports.createToken = function(user) {
   };
   return jwt.encode(payload, secret);
 };
+
+exports.decodeToken = function(token) {
+  var decoded = jwt.decode(token, secret);
+  return decoded;
+};

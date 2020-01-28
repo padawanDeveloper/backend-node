@@ -6,6 +6,7 @@ const path = require("path");
 const jwt = require("../services/jwt");
 const User = require("../models/user");
 const Follow = require("../models/follow");
+const Work = require("../models/work");
 
 // Routes
 function home(req, res) {
@@ -23,7 +24,7 @@ function saveUser(req, res) {
     params.name &&
     params.email &&
     params.password &&
-    params.rol &&
+    //params.rol &&
     params.socialUrl
   ) {
     user.name = params.name;
@@ -67,7 +68,9 @@ function loginUser(req, res) {
             return res.status(200).send({ token: jwt.createToken(user) });
           } else {
             user.password = undefined;
-            return res.status(200).send({ user: user });
+            return res
+              .status(200)
+              .send({ user: user, token: jwt.createToken(user) });
           }
         } else {
           return res.status(404).send({ message: "Error en la password" });
@@ -257,6 +260,34 @@ function getImageFile(req, res) {
   });
 }
 
+function getCount(req, res) {
+  let userId = req.user.sub;
+  if (req.params.id) {
+    userId = req.params.id;
+  }
+
+  getCountFollow(userId).then(value => res.status(200).send(value));
+}
+
+async function getCountFollow(userId) {
+  const following = await Follow.count({ user: userId })
+    .exec()
+    .then(count => count)
+    .catch(err => handleHerror(err));
+
+  const followed = await Follow.count({ followed: userId })
+    .exec()
+    .then(count => count)
+    .catch(err => handleHerror(err));
+
+  const works = await Work.count({ author: userId })
+    .exec()
+    .then(count => count)
+    .catch(err => handleHerror(err));
+
+  return { following, followed, works };
+}
+
 module.exports = {
   home,
   loginUser,
@@ -266,5 +297,6 @@ module.exports = {
   getUser,
   getUsers,
   updateUser,
-  uploadImage
+  uploadImage,
+  getCount
 };
